@@ -1,3 +1,4 @@
+"use client";
 import GenerateClient from "./GenerateClient";
 
 export default function Page() {
