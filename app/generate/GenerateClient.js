@@ -1,59 +1,44 @@
 "use client";
 import React, { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useSearchParams } from "next/navigation";
 
-const Generate = () => {
+export default function GenerateClient() {
   const searchParams = useSearchParams();
-  const [links, setLinks] = useState([{ link: "", linktext: "" }]);
   const [handle, setHandle] = useState(searchParams.get("handle") || "");
+  const [links, setLinks] = useState([{ link: "", linktext: "" }]);
   const [pic, setPic] = useState("");
   const [desc, setDesc] = useState("");
 
-  const handleChange = (index, value, linktext) => {
-    setLinks((initialLinks) =>
-      initialLinks.map((item, idx) =>
-        index === idx ? { link: value, linktext: linktext } : item
-      )
+  // Update a link object in the array
+  const handleChange = (index, link, linktext) =>
+    setLinks((prev) =>
+      prev.map((item, idx) => (idx === index ? { link, linktext } : item))
     );
-  };
 
-  const addLink = () => {
-    setLinks([...links, { link: "", linktext: "" }]);
-  };
+  // Add a new empty link
+  const addLink = () => setLinks([...links, { link: "", linktext: "" }]);
 
+  // Submit data to API
   const submitLinks = async () => {
-    const myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
-
-    const raw = JSON.stringify({
-      links,
-      handle,
-      pic,
-      desc,
-    });
-
     try {
       const res = await fetch("/api/add", {
         method: "POST",
-        headers: myHeaders,
-        body: raw,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ handle, links, pic, desc }),
       });
 
       const result = await res.json();
-
       if (result.success) {
         toast.success(result.message);
         setLinks([{ link: "", linktext: "" }]);
         setHandle("");
         setPic("");
         setDesc("");
-      } else {
-        toast.error(result.message);
-      }
+      } else toast.error(result.message);
     } catch (err) {
-      toast.error("Server error, try again!");
+      toast.error("Server error!");
     }
   };
 
@@ -119,6 +104,7 @@ const Generate = () => {
               onChange={(e) => setDesc(e.target.value)}
               className="bg-white/10 text-white placeholder-gray-300 px-5 py-3 rounded-full outline-none backdrop-blur-sm border border-white/20 shadow-[0_0_10px_#FF4500] focus:shadow-[0_0_20px_#FFD700] transition-all duration-300"
             />
+
             <button
               disabled={!handle || !pic || !links[0].linktext}
               className="disabled:bg-slate-500 mt-4 bg-[#FF4500] text-white font-bold py-3 rounded-full shadow-[0_0_20px_#FF4500] hover:bg-[#ff5a1e] hover:shadow-[0_0_30px_#FFD700] transition-all duration-300 uppercase tracking-widest"
@@ -141,6 +127,4 @@ const Generate = () => {
       </div>
     </>
   );
-};
-
-export default Generate;
+}
